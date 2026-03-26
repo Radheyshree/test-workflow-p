@@ -1,3 +1,3 @@
 # Hello
 
-Welcome to this repository!
+Welcome! This is a simple hello markdown file.
