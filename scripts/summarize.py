@@ -254,35 +254,34 @@ class CodebaseAnalyzer:
 
     def _build_tree(self) -> str:
         lines = []
-        sorted_files = sorted(self.files, key=lambda p: str(p.relative_to(self.repo_path)))
+        tree = {}
 
-        def build_level(paths: List[Path], prefix: str = '') -> None:
-            if not paths:
-                return
-
-            dirs = defaultdict(list)
-            current_level_files = []
-
-            for path in paths:
-                rel = path.relative_to(self.repo_path)
-                parts = rel.parts
-                if len(parts) == 1:
-                    current_level_files.append(parts[0])
+        for path in self.files:
+            rel = path.relative_to(self.repo_path)
+            parts = rel.parts
+            current = tree
+            for i, part in enumerate(parts):
+                if i == len(parts) - 1:
+                    current[part] = None
                 else:
-                    dirs[parts[0]].append(path)
+                    if part not in current:
+                        current[part] = {}
+                    current = current[part]
 
-            for f in sorted(current_level_files):
-                lines.append(f"{prefix}├── {f}")
-
-            for i, dir_name in enumerate(sorted(dirs.keys())):
-                is_last_dir = (i == len(dirs) - 1)
-                connector = '└── ' if is_last_dir else '├── '
-                lines.append(f"{prefix}{connector}{dir_name}/")
-                new_prefix = prefix + ('    ' if is_last_dir else '│   ')
-                build_level(dirs[dir_name], new_prefix)
+        def render_tree(node: dict, prefix: str = '') -> None:
+            items = sorted(node.items())
+            for i, (name, children) in enumerate(items):
+                is_last = (i == len(items) - 1)
+                connector = '└── ' if is_last else '├── '
+                if children is None:
+                    lines.append(f"{prefix}{connector}{name}")
+                else:
+                    lines.append(f"{prefix}{connector}{name}/")
+                    new_prefix = prefix + ('    ' if is_last else '│   ')
+                    render_tree(children, new_prefix)
 
         lines.append(f"{self.repo_path.name}/")
-        build_level(sorted_files)
+        render_tree(tree)
         return '\n'.join(lines)
 
     def generate_summary(self) -> str:
