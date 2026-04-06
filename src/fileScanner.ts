@@ -45,7 +45,7 @@ export class FileScanner {
   private basePath: string;
   private ignorePatterns: string[];
   private maxDepth: number;
-  private ignoreManager: ignore.Ignore;
+  private ignoreManager: ReturnType<typeof ignore>;
 
   constructor(basePath: string, excludePatterns: string[] = [], maxDepth: number = 20) {
     this.basePath = normalizePath(basePath);
